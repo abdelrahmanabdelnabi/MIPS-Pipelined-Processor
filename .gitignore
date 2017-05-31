@@ -1,0 +1,18 @@
+# ignore everything
+*
+
+# except those files
+!.gitignore
+!topmulti.sv
+!controller.sv
+!mipsmem.sv
+!mips.sv
+!hazard.sv
+!alu.sv
+!mipsparts.sv
+!maindecoder.sv
+!datapath.sv
+!aludecoder.sv
+!testbench.sv
+!memfile.dat
+!pipelined report/*
