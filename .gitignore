@@ -15,4 +15,5 @@
 !aludecoder.sv
 !testbench.sv
 !memfile.dat
-!pipelined report/*
+!pipelined-report/report.tex
+!pipelined-report/images/*
