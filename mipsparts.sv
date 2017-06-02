@@ -47,6 +47,12 @@ module signext(input  logic [15:0] a,
   assign y = {{16{a[15]}}, a};
 endmodule
 
+module signext8(input logic [7:0] a,
+		output logic [31:0] y);
+
+  assign y = {{24{a[7]}}, a};
+endmodule
+
 module flopr #(parameter WIDTH = 8)
               (input  logic             clk, reset,
                input  logic [WIDTH-1:0] d, 

@@ -5,7 +5,7 @@ module controller(input logic clk, reset,
 	output logic memtoregE, memtoregM,
 	output logic memtoregW, memwriteM,
 	output logic pcsrcD, branchD, bneD, alusrcE,
-	output logic regdstE,regwriteE, regwriteM, regwriteW, jumpD,
+	output logic regdstE,regwriteE, regwriteM, regwriteW, jumpD, lbW,
         output logic [2:0] alucontrolE);
 
 logic [1:0] aluopD;
@@ -13,9 +13,10 @@ logic memtoregD, memwriteD, alusrcD,
 regdstD, regwriteD;
 logic [2:0] alucontrolD;
 logic memwriteE;
+logic lbD, lbE, lbM;
 
 maindec md(opD, memtoregD, memwriteD, branchD, bneD,
-	alusrcD, regdstD, regwriteD, jumpD,
+	alusrcD, regdstD, regwriteD, jumpD, lbD,
 	aluopD);
 
 aludec ad(functD, aluopD, alucontrolD);
@@ -23,19 +24,19 @@ aludec ad(functD, aluopD, alucontrolD);
 assign pcsrcD = (branchD & equalD) | (bneD & ~equalD);
 
 // pipeline registers
-floprc #(8) regE(clk, reset, flushE,
-{memtoregD, memwriteD, alusrcD, regdstD, regwriteD, alucontrolD},
-{memtoregE, memwriteE, alusrcE, regdstE, regwriteE, alucontrolE}
+floprc #(9) regE(clk, reset, flushE,
+{memtoregD, memwriteD, alusrcD, regdstD, regwriteD, alucontrolD, lbD},
+{memtoregE, memwriteE, alusrcE, regdstE, regwriteE, alucontrolE, lbE}
 );
 
-flopr #(3) regM(clk, reset,
-{memtoregE, memwriteE, regwriteE},
-{memtoregM, memwriteM, regwriteM}
+flopr #(4) regM(clk, reset,
+{memtoregE, memwriteE, regwriteE, lbE},
+{memtoregM, memwriteM, regwriteM, lbM}
 );
 
-flopr #(2) regW(clk, reset,
-{memtoregM, regwriteM},
-{memtoregW, regwriteW}
+flopr #(3) regW(clk, reset,
+{memtoregM, regwriteM, lbM},
+{memtoregW, regwriteW, lbW}
 );
 
 endmodule

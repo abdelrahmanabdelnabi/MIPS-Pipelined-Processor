@@ -3,7 +3,7 @@ input logic memtoregE, memtoregM, memtoregW,
 input logic pcsrcD, branchD, bneD,
 input logic alusrcE, regdstE,
 input logic regwriteE, regwriteM, regwriteW,
-input logic jumpD,
+input logic jumpD, lbW,
 input logic [2:0] alucontrolE,
 output logic equalD,
 output logic [31:0] pcF,
@@ -27,6 +27,8 @@ logic [31:0] pcplus4D, instrD;
 logic [31:0] aluoutE, aluoutW;
 logic [31:0] readdataW, resultW;
 logic zeroE;
+logic [7:0] selectedbyteW;
+logic [31:0] selectedbyteextW, selectedreaddataW;
 
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
@@ -87,5 +89,12 @@ flopr #(5) r3M(clk, reset, writeregE, writeregM);
 flopr #(32) r1W(clk, reset, aluoutM, aluoutW);
 flopr #(32) r2W(clk, reset, readdataM, readdataW);
 flopr #(5) r3W(clk, reset, writeregM, writeregW);
-mux2 #(32) resmux(aluoutW, readdataW, memtoregW, resultW);
+
+// load byte logic
+mux4 #(8) byteselector(readdataW[7:0], readdataW[15:8], readdataW[23:16],readdataW[31:24],
+aluoutW[1:0], selectedbyteW);
+signext8 se2(selectedbyteW, selectedbyteextW);
+mux2 #(32) datamux(readdataW, selectedbyteextW, lbW, selectedreaddataW);
+
+mux2 #(32) resmux(aluoutW, selectedreaddataW, memtoregW, resultW);
 endmodule
