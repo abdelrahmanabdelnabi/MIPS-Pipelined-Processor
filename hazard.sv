@@ -1,7 +1,7 @@
 module hazard(input logic [4:0] rsD, rtD, rsE, rtE,
 	input logic [4:0] writeregE, writeregM, writeregW,
 	input logic regwriteE, regwriteM, regwriteW,
-	input logic memtoregE, memtoregM, branchD,
+	input logic memtoregE, memtoregM, branchD, bneD,
 	output logic forwardaD, forwardbD,
 	output logic [1:0] forwardaE, forwardbE,
 	output logic stallF, stallD,
@@ -30,7 +30,7 @@ end
 
 // stalls
 assign #1 lwstallD = memtoregE & (rtE == rsD | rtE == rtD);
-assign #1 branchstallD = branchD & (regwriteE & (writeregE == rsD | writeregE == rtD) |
+assign #1 branchstallD = (branchD | bneD) & (regwriteE & (writeregE == rsD | writeregE == rtD) |
 			 memtoregM &(writeregM == rsD | writeregM == rtD));
 assign #1 stallD = lwstallD | branchstallD;
 assign #1 stallF = stallD;

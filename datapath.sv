@@ -1,6 +1,6 @@
 module datapath(input logic clk, reset,
 input logic memtoregE, memtoregM, memtoregW,
-input logic pcsrcD, branchD,
+input logic pcsrcD, branchD, bneD,
 input logic alusrcE, regdstE,
 input logic regwriteE, regwriteM, regwriteW,
 input logic jumpD,
@@ -31,7 +31,7 @@ logic zeroE;
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
 writeregW,regwriteE, regwriteM, regwriteW,
-memtoregE, memtoregM, branchD,
+memtoregE, memtoregM, branchD, bneD,
 forwardaD, forwardbD, forwardaE,
 forwardbE,
 stallF, stallD, flushE

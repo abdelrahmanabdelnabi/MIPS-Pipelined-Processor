@@ -14,12 +14,12 @@ logic flushE, equalD;
 controller c(clk, reset, opD, functD, flushE,
 equalD,memtoregE, memtoregM,
 memtoregW, memwriteM, pcsrcD,
-branchD,alusrcE, regdstE, regwriteE,
+branchD, bneD, alusrcE, regdstE, regwriteE,
 regwriteM, regwriteW, jumpD,
 alucontrolE
 );
 
-datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, pcsrcD, branchD,
+datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, pcsrcD, branchD, bneD,
 alusrcE, regdstE, regwriteE, regwriteM, regwriteW, jumpD, alucontrolE, equalD, pcF, instrF,
 aluoutM, writedataM, readdataM, opD, functD, flushE
 );
