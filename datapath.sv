@@ -26,7 +26,7 @@ logic [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
 logic [31:0] pcplus4D, instrD;
 logic [31:0] aluoutE, aluoutW;
 logic [31:0] readdataW, resultW;
-logic zero;
+logic zeroE;
 
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
@@ -75,7 +75,7 @@ floprc #(5) r6E(clk, reset, flushE, rdD, rdE);
 mux3 #(32) forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
 mux3 #(32) forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
 mux2 #(32) srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
-alu alu(srca2E, srcb3E, alucontrolE, aluoutE, zero);
+alu alu(srca2E, srcb3E, alucontrolE, aluoutE, zeroE);
 mux2 #(5) wrmux(rtE, rdE, regdstE, writeregE);
 
 // Memory stage
