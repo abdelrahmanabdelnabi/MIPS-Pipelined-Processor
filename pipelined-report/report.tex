@@ -1,14 +1,16 @@
 \documentclass[titlepage,12pt,twoside,a4paper]{article}
 
 % packages
-% set margins
-\usepackage[0.8]{geometry}
+\usepackage[0.8]{geometry} % set margins
 \usepackage{listings}
+\usepackage{textcomp}
+
 % turn on page numbers and section name on each page
 \pagestyle{headings}
 
 % for multi columns pages
 \usepackage{multicol}
+
 % define the formatting for inline code snippets
 \newcommand{\code}[1]{{\texttt{#1}}}
 
@@ -106,6 +108,37 @@ We test the instruction by modifying our test program to use \code{lb} instead o
 To see the changes made to the code to support this instruction run:\\
 \code{git diff 18dc 5547}
 
+\subsection{Logical Shift}
+
+logical shift left, \code{sll} and right \code{srl} are R-Type instructions. The infrastructure for R-Type instructions already exists and therefore no significant changes to the datapath are required. Most of the change occurs because of the \textit{shamt} field needs to be passed to the execute stage and the ALU. We add the shamt to the execute stage pipeline register, and modify the ALU to accept it as an input. The ALU decoder will need to detect the shift instructions and generate the proper ALUcontrol signals, so we add to 2 rows to the decoder's truth table, one for each instruction. Moreover we extend the ALUControl signal to 4 bits to be able to encode the two new instructions. Table \ref{table:aluctrl} shows new the ALU control signals truth table.
+
+To test the two new instructions, we add \code{sll \$s2, \$s2, 4} and \code{srl \$s2, \$s2, 4} just before the last instruction in out test program. This won't modify the final result since \$s2 contains 7 before running the shift instructions and we shift left then right by the same amount. Running the simulation, the correct result is written and completes successfully.
+
+To see the changes made to the code to support these instructions run:\\
+\code{git diff 2656 5ab4} 
+\begin{table}
+\begin{center}
+	
+	\begin{tabular}{|c|c|}
+		\hline
+		$ALUControl_{3:0}$ & Function \\
+		\hline
+		0000 & A AND B \\
+		0001 & A OR B \\
+		0010 & A + B \\
+		0011 & not used \\
+		1000 & A AND $\overline{B}$ \\
+		1001 & A OR $\overline{B}$ \\
+		1010 & A - B \\
+		1011 & SLT \\
+		0100 & B \textlangle{}\textlangle{ }shamt \\
+		0101 & B \textrangle{}\textrangle{ }shamt \\
+		\hline
+	\end{tabular}
+\end{center}
+	\label{table:aluctrl}
+	\caption{ALU control truth table}
+\end{table}
 %=====================================%
 % Source Code appendix
 %=====================================%

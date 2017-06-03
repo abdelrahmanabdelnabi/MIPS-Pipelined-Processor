@@ -1,9 +1,3 @@
-//------------------------------------------------
-// mipsparts.sv
-// David_Harris@hmc.edu 23 October 2005
-// Updated to SystemVerilog dmh 12 November 2010
-// Components used in MIPS processor
-//------------------------------------------------
 
 module regfile(input  logic        clk, 
                input  logic        we3, 
