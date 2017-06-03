@@ -1,0 +1,127 @@
+\documentclass[titlepage,12pt,twoside,a4paper]{article}
+
+% packages
+% set margins
+\usepackage[0.8]{geometry}
+\usepackage{listings}
+% turn on page numbers and section name on each page
+\pagestyle{headings}
+
+% for multi columns pages
+\usepackage{multicol}
+% define the formatting for inline code snippets
+\newcommand{\code}[1]{{\texttt{#1}}}
+
+% no paragraph indentation
+\setlength{\parindent}{0em}
+
+% one line between each paragraph
+\setlength{\parskip}{1em}
+
+% Title Page
+\title{MIPS PIPELINED PROCESSOR}
+\author{
+	Abdelrahman Mohamed Abdelnabi\\
+	3466
+	\and
+	Ahmed Atia Lotfey Siam \\
+	4129
+	\and
+	Ahmed Fayez \\
+	4130
+}
+
+%=====================================%
+% DOCUMENT
+%=====================================%
+\begin{document}
+\maketitle
+
+\begin{abstract}
+	Pipelining is a powerful way to improve the	throughput of a digital system. We design a pipelined processor by subdividing the single-cycle processor into five pipeline stages. Thus, five instructions can execute simultaneously, one in each stage. Because each stage has only one-fifth of the entire logic, the clock frequency is almost five times faster. Hence, the latency of each instruction is ideally unchanged, but the throughput is ideally five times better. Microprocessors execute millions or billions of instructions per second, so throughput is more important than latency. Pipelining introduces some overhead, so the throughput will not be quite as high as we might ideally desire, but pipelining nevertheless gives such great advantage for so little cost that all modern high-performance microprocessors are pipelined.
+	In this Lab, we will design and implement a MIPS piplined  processor using\textit{ System Verilog}.
+\end{abstract}
+
+%=====================================%
+% CHAPTER 1
+%=====================================%
+
+
+\section{Introduction}
+\subsection{Supported Instructions}
+\begin{tabular}{ccc}
+	\label{ISA}
+	% TODO: add table of supported instructions here
+	Opcodes & Example Assembly & Semantics \\
+	
+\end{tabular}
+
+\subsection{Initial Version}
+We will use the MIPS pipelined version developed in our textbook as the initial version which we will build on it other components to support the remaining instructions.
+
+This version already supports the instructions:add (\code{add}), sub (\code{sub}), add immediate (\code{addi}), and (\code{and}), or (\code{or}), load word (\code{lw}), sw (\code{sw}), branch on equal (\code{beq}), set on less than (\code{slt}), jump (\code{j}), with a hazard and control unit.
+
+The initial version also uses early branch resolution to make a branch decision in the decode stage.
+
+\subsection{fixing a small error}
+
+The version in the textbook uses an equal comparator in the decode stage for early branch resolution. The datapath module instantiates an \code{eqcmp} object which is not defined in any file. we implemented the module ourselves. You can find the source code of the module in appendix \ref{appendix:src:mipsparts}
+
+The pipelined processor writes the register file in the first half of the write-back stage and reads it the second half of the decode stage. However, this was not the case in the text book code. The register file was written and read at the same time. To fix this, we added a delay of 5 time units after the write.
+
+After this two fixes the test bench indicates a successful simulation.
+%=====================================%
+% CHAPTER 2
+%=====================================%
+
+\section{Extending the Design}
+
+In this section we will modify and/or extend the design of the MIPS pipelined processor to support new instructions as indicated in table \ref{ISA}
+
+\subsection{Branch on Not Equal}
+supporting this instruction is relatively easy, as branch on not equal is already supported. We just have to detect the not equal condition. To do this, we modify the control unit to detect the opcode of \code{bne} and generate the required control signals.
+
+We add a new control signal, \code{bneD} which is 1 when the instruction in the decode stage is a \code{bne}. all the control signals for \code{beq} and \code{bne} are same except for the signals \code{branchD} and \code{bneD}, their values are reversed. 
+
+The logic for \code{pcsrcD} is now different. \code{prcsrcD} is now 1 when either of the conditions of \code{beq} and \code{bne} are satisfied. i.e \code{pcsrcD = (branchD \& equalD) | (bneD \& $\sim$equalD)}
+
+
+The logic for stalling will need to detect the \code{bne} instruction and stall as necessary exactly the same like for \code{beq}. Therefore the hazard unit takes a new input which the control signal \code{bneD}.
+
+This completes all the necessary changes required for the control unit and datapath.
+
+We test the instruction by adding a \code{bne \$s2, \$2, 0x30} after the first instruction of our test program. Testing shows that the stall and branching works properly both when the branch is taken and not taken.
+
+To see the changes to the source code to support this instruction run:\\
+\code{git diff abdc c7c0}
+
+\subsection{load byte}
+
+An example of this instruction is \code{lb \$s1, 40(\$s0)}, which loads the byte at the address of 40 + reg(\$s0), sign-extends it and puts it in register \$s1.
+
+To support this instruction we need to select a byte out of the 4 bytes read from memory each cycle according to $memaddr_{[1:0]}$, and then sign extend it to 32 bits. We will need a control signal that tells us that this is a \code{lb} instruction, then at the memory stage, we will select either the 32 bits memory output or the sign extended byte according to this signal. This implies using a 2-1 multiplexer that has this control signal as its selector. We will need another multiplexer to select the proper byte from the memory word read.
+
+We test the instruction by modifying our test program to use \code{lb} instead of \code{lw} (temporarily). Since this should still the load 7 into register \$s2, it won't modify the final result. We run the simulation and it indicates successful completion. we also see that the \code{lbW} signal takes the value 1 only at the write-back stage of the load byte instruction.
+
+To see the changes made to the code to support this instruction run:\\
+\code{git diff 18dc 5547}
+
+%=====================================%
+% Source Code appendix
+%=====================================%
+
+\newpage
+\appendix
+\begin{multicols}{2}
+[	
+\section{Source Code}
+\label{appendix:src}
+]
+\subsection{maindecoder.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../maindecoder.sv}
+
+\subsection{mipsparts.sv}
+\label{appendix:src:mipsparts}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../mipsparts.sv}
+\end{multicols}
+\end{document}          
