@@ -110,7 +110,7 @@ To see the changes made to the code to support this instruction run:\\
 
 \subsection{Logical Shift}
 
-logical shift left, \code{sll} and right \code{srl} are R-Type instructions. The infrastructure for R-Type instructions already exists and therefore no significant changes to the datapath are required. Most of the change occurs because of the \textit{shamt} field needs to be passed to the execute stage and the ALU. We add the shamt to the execute stage pipeline register, and modify the ALU to accept it as an input. The ALU decoder will need to detect the shift instructions and generate the proper ALUcontrol signals, so we add to 2 rows to the decoder's truth table, one for each instruction. Moreover we extend the ALUControl signal to 4 bits to be able to encode the two new instructions. Table \ref{table:aluctrl} shows new the ALU control signals truth table.
+logical shift left, \code{sll} and right \code{srl} are R-Type instructions. The infrastructure for R-Type instructions already exists and therefore no significant changes to the datapath are required. Most of the change occurs because of the \textit{shamt} field needs to be passed to the execute stage and the ALU. We add the shamt to the execute stage pipeline register, and modify the ALU to accept it as an input. The ALU decoder will need to detect the shift instructions and generate the proper ALUcontrol signals, so we add 2 rows to the decoder's truth table, one for each instruction. Moreover we extend the ALUControl signal to 4 bits to be able to encode the two new instructions. Table \ref{table:aluctrl} shows new the ALU control signals truth table.
 
 To test the two new instructions, we add \code{sll \$s2, \$s2, 4} and \code{srl \$s2, \$s2, 4} just before the last instruction in out test program. This won't modify the final result since \$s2 contains 7 before running the shift instructions and we shift left then right by the same amount. Running the simulation, the correct result is written and completes successfully.
 
@@ -139,6 +139,12 @@ To see the changes made to the code to support these instructions run:\\
 	\label{table:aluctrl}
 	\caption{ALU control truth table}
 \end{table}
+
+
+\section{Jump and Link}
+The semantics of \code{jal label} is \code{\$ra = PC + 4, goto label}. \code{jal} does exactly the same as jump but writes the value of PC onto register 31, the return address register.
+
+Implementing this instruction won't affect the hardware as much because \code{jal} is mixture of jump and R-Type, both of which are already supported. We will add to the datapath a new mux that selects which data to write to the register file. The new mux will choose between \textit{ResultW} and \textit{PCPlus4W}, according to the selector \textit{jal}, which is a new control signal that is true only if the instruction is \code{jal}.
 %=====================================%
 % Source Code appendix
 %=====================================%
