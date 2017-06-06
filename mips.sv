@@ -7,7 +7,8 @@ module mips(input logic clk, reset,
 	output logic [31:0] aluoutM, writedataM,
 	input logic [31:0] readdataM);
 logic [5:0] opD, functD;
-logic regdstE, alusrcE, pcsrcD, memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW;
+logic [1:0] regdstE;
+logic alusrcE, pcsrcD, memtoregE, memtoregM, memtoregW, regwriteE, regwriteM, regwriteW;
 logic [3:0] alucontrolE;
 logic flushE, equalD;
 
