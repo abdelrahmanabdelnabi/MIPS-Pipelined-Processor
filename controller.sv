@@ -6,7 +6,7 @@ module controller(input logic clk, reset,
 	output logic memtoregW, memwriteM,
 	output logic pcsrcD, branchD, bneD, alusrcE,
 	output logic [1:0] regdstE,
-	output logicregwriteE, regwriteM, regwriteW, jumpD, lbW,
+	output logic regwriteE, regwriteM, regwriteW, jumpD, lbW,
         output logic [3:0] alucontrolE);
 
 logic [1:0] aluopD;
