@@ -103,6 +103,6 @@ aluoutW[1:0], selectedbyteW);
 signext8 se2(selectedbyteW, selectedbyteextW);
 mux2 #(32) datamux(readdataW, selectedbyteextW, lbW, selectedreaddataW);
 
-mux2 #(32) resmux(aluoutW, selectedreaddataW, memtoregW, resorpc);
+mux2 #(32) resmux(aluoutW, selectedreaddataW, memtoregW, aluordata);
 mux2 #(32) resorpc(aluordata, pcplus4W, jalW, resultW);
 endmodule

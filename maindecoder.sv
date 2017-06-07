@@ -21,6 +21,7 @@ case(op)
 	6'b001000: controls <= 13'b100_1000_0000_00; //ADDI
 	6'b000010: controls <= 13'b000_0000_0100_00; //J
 	6'b100000: controls <= 13'b100_1000_1001_00; //LB
+	6'b000011: controls <= 13'b110_0000_0110_00; //JAL
 	default: controls <= 13'bxxxxxxxxxxxxx; //???
 endcase
 endmodule
