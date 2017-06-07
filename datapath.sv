@@ -32,6 +32,7 @@ logic zeroE;
 logic [7:0] selectedbyteW;
 logic [31:0] selectedbyteextW, selectedreaddataW;
 logic [31:0] aluordata;
+logic [31:0] hiE, loE, hiM, loM, hiW, loW;
 
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
@@ -84,18 +85,23 @@ mux3 #(32) forwardaemux(srcaE, resultW, aluoutM, forwardaE, srca2E);
 mux3 #(32) forwardbemux(srcbE, resultW, aluoutM, forwardbE, srcb2E);
 mux2 #(32) srcbmux(srcb2E, signimmE, alusrcE, srcb3E);
 alu alu(srca2E, srcb3E, alucontrolE, shamtE, aluoutE, zeroE);
+multdivunit multiplier(srca2E, srcb2E, multordivE, hiE, loE);
 mux3 #(5) wrmux(rtE, rdE, 5'b11111, regdstE, writeregE);
 
 // Memory stage
 flopr #(32) r1M(clk, reset, srcb2E, writedataM);
 flopr #(32) r2M(clk, reset, aluoutE, aluoutM);
 flopr #(32) r4M(clk, reset, pcplus4E, pcplus4M);
+flopr #(32) r5M(clk, reset, hiE, hiM);
+flopr #(32) r6M(clk, reset, loE, loM);
 flopr #(5) r3M(clk, reset, writeregE, writeregM);
 
 // Writeback stage
 flopr #(32) r1W(clk, reset, aluoutM, aluoutW);
 flopr #(32) r2W(clk, reset, readdataM, readdataW);
 flopr #(32) r4W(clk, reset, pcplus4M, pcplus4W);
+flopr #(32) r5W(clk, reset, hiM, hiW);
+flopr #(32) r6W(clk, reset, loM, loW);
 flopr #(5) r3W(clk, reset, writeregM, writeregW);
 
 // load byte logic
