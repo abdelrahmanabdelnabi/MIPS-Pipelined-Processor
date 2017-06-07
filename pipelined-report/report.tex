@@ -1,16 +1,16 @@
-\documentclass[titlepage,12pt,twoside,a4paper]{article}
+\documentclass[titlepage,12pt,oneside,a4paper]{article}
 
 % packages
-\usepackage[0.8]{geometry} % set margins
-\usepackage{listings}
-\usepackage{textcomp}
+\usepackage{times}         % font
+\usepackage{geometry}      % set margins
+\usepackage{listings}      % for code listings
 \usepackage{graphicx}      % for inserting images
-\graphicspath{{images/}}     % define the images directory
+\usepackage{multicol}      % for multi columns pages
+
 % turn on page numbers and section name on each page
 \pagestyle{headings}
 
-% for multi columns pages
-\usepackage{multicol}
+\graphicspath{{images/}}     % define the images directory
 
 % define the formatting for inline code snippets
 \newcommand{\code}[1]{{\texttt{#1}}}
@@ -41,8 +41,7 @@
 \maketitle
 
 \begin{abstract}
-	Pipelining is a powerful way to improve the	throughput of a digital system. We design a pipelined processor by subdividing the single-cycle processor into five pipeline stages. Thus, five instructions can execute simultaneously, one in each stage. Because each stage has only one-fifth of the entire logic, the clock frequency is almost five times faster. Hence, the latency of each instruction is ideally unchanged, but the throughput is ideally five times better. Microprocessors execute millions or billions of instructions per second, so throughput is more important than latency. Pipelining introduces some overhead, so the throughput will not be quite as high as we might ideally desire, but pipelining nevertheless gives such great advantage for so little cost that all modern high-performance microprocessors are pipelined.
-	In this Lab, we will design and implement a MIPS piplined  processor using\textit{ System Verilog}.
+	Pipelining is a powerful way to improve the	throughput of a digital system. We design a pipelined processor by subdividing the single-cycle processor into five pipeline stages. Thus, five instructions can execute simultaneously, one in each stage. Because each stage has only one-fifth of the entire logic, the clock frequency is almost five times faster. Hence, the latency of each instruction is ideally unchanged, but the throughput is ideally five times better. Microprocessors execute millions or billions of instructions per second, so throughput is more important than latency. Pipelining introduces some overhead, so the throughput will not be quite as high as we might ideally desire, but pipelining nevertheless gives such great advantage for so little cost that all modern high-performance microprocessors are pipelined. In this Lab, we will design and implement a MIPS piplined  processor using\textit{ System Verilog}.
 \end{abstract}
 
 %=====================================%
@@ -132,8 +131,8 @@ To see the changes made to the code to support these instructions run:\\
 		1001 & A OR $\overline{B}$ \\
 		1010 & A - B \\
 		1011 & SLT \\
-		0100 & B \textlangle{}\textlangle{ }shamt \\
-		0101 & B \textrangle{}\textrangle{ }shamt \\
+		0100 & B $\langle\langle$ shamt \\
+		0101 & B $\rangle\rangle$ shamt \\
 		\hline
 	\end{tabular}
 \end{center}
@@ -147,7 +146,7 @@ The semantics of \code{jal label} is \code{\$ra = PC + 4, goto label}. \code{jal
 
 Implementing this instruction won't affect the hardware as much because \code{jal} is mixture of jump and R-Type, both of which are already supported. We will add to the datapath a new mux that selects which data to write to the register file. The new mux will choose between \textit{ResultW} and \textit{PCPlus4W}, according to the selector \textit{jal}, which is a new control signal that is true only if the instruction is \code{jal}. The \textit{PCPlus4} signal must be passed from the decode to the write back stage so that we can write it to the register file. We will also extend the \textit{RegDst} mux, which selects which register to write on, to accept the number 31 as a new input. This means that we need to extend the mux selector control signal, \textit{RegDst}, to 2 bits.
 
-The main decoder sets the \textit{jump} signal to 1 so that the hazard unit handles flushes appropiately. Also no modifications to the hazard unit are required since the writing to register file part of the instruction (\textit{WriteRegE} and \textit{RegWriteE} signals) is the same as for R-Type instructions.
+The main decoder sets the \textit{Jump} signal to 1 so that the hazard unit handles flushes appropriately. Also no modifications to the hazard unit are required since the writing to register file part of the instruction (\textit{WriteRegE} and \textit{RegWriteE} signals) is the same as for R-Type instructions.
 
 To test the instruction, we modify the test program to use \code{jal} instead of \code{j} on the instruction at address 3C. This won't change the results. It will only write the value of PC + 4, which is 40 at the time of executing the instruction, to the return address register, \$ra.
 
