@@ -152,7 +152,8 @@ To test the instruction, we modify the test program to use \code{jal} instead of
 Figure \ref{jaltest} shows the simulation of the test program with \code{jal} being used. Notice the simulation ends successfully the \textit{jalD} and \textit{jalW} signals are 1 when the instruction is decoded and when the result is written to the register file. Also notice that the return address register has the correct value (0x40) written to it, at the second half of the write back stage of the \code{jal} instruction.
 
 To see the changes made to the code to support this instruction run: \\
-\code{}
+\code{git diff 8f6f e0ea -- mips.sv controller.sv datapath.sv \\ maindecoder.sv}
+
 \begin{figure}
 	\includegraphics[width=\textwidth]{jaltest.png}
 	\centering
@@ -160,6 +161,8 @@ To see the changes made to the code to support this instruction run: \\
 	\caption{simulation and testing of \code{jal}}
 \end{figure}
 
+
+\subsection{Next Instruction}
 %=====================================%
 % Source Code appendix
 %=====================================%
