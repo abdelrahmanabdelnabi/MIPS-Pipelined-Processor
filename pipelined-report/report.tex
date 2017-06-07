@@ -4,7 +4,8 @@
 \usepackage[0.8]{geometry} % set margins
 \usepackage{listings}
 \usepackage{textcomp}
-
+\usepackage{graphicx}      % for inserting images
+\graphicspath{{images/}}     % define the images directory
 % turn on page numbers and section name on each page
 \pagestyle{headings}
 
@@ -141,10 +142,24 @@ To see the changes made to the code to support these instructions run:\\
 \end{table}
 
 
-\section{Jump and Link}
+\subsection{Jump and Link}
 The semantics of \code{jal label} is \code{\$ra = PC + 4, goto label}. \code{jal} does exactly the same as jump but writes the value of PC onto register 31, the return address register.
 
-Implementing this instruction won't affect the hardware as much because \code{jal} is mixture of jump and R-Type, both of which are already supported. We will add to the datapath a new mux that selects which data to write to the register file. The new mux will choose between \textit{ResultW} and \textit{PCPlus4W}, according to the selector \textit{jal}, which is a new control signal that is true only if the instruction is \code{jal}.
+Implementing this instruction won't affect the hardware as much because \code{jal} is mixture of jump and R-Type, both of which are already supported. We will add to the datapath a new mux that selects which data to write to the register file. The new mux will choose between \textit{ResultW} and \textit{PCPlus4W}, according to the selector \textit{jal}, which is a new control signal that is true only if the instruction is \code{jal}. The \textit{PCPlus4} signal must be passed from the decode to the write back stage so that we can write it to the register file. We will also extend the \textit{RegDst} mux, which selects which register to write on, to accept the number 31 as a new input. This means that we need to extend the mux selector control signal, \textit{RegDst}, to 2 bits.
+
+To test the instruction, we modify the test program to use \code{jal} instead of \code{j} on the instruction at address 3C. This won't change the results. It will only write the value of PC + 4, which is 40 at the time of executing the instruction, to the return address register, \$ra.
+
+Figure \ref{jaltest} shows the simulation of the test program with \code{jal} being used. Notice the simulation ends successfully the \textit{jalD} and \textit{jalW} signals are 1 when the instruction is decoded and when the result is written to the register file. Also notice that the return address register has the correct value (0x40) written to it, at the second half of the write back stage of the \code{jal} instruction.
+
+To see the changes made to the code to support this instruction run: \\
+\code{}
+\begin{figure}
+	\includegraphics[width=\textwidth]{jaltest.png}
+	\centering
+	\label{jaltest}
+	\caption{simulation and testing of \code{jal}}
+\end{figure}
+
 %=====================================%
 % Source Code appendix
 %=====================================%
