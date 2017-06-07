@@ -16,12 +16,12 @@ controller c(clk, reset, opD, functD, flushE,
 equalD,memtoregE, memtoregM,
 memtoregW, memwriteM, pcsrcD,
 branchD, bneD, alusrcE, regdstE, regwriteE,
-regwriteM, regwriteW, jumpD, lbW,
+regwriteM, regwriteW, jumpD, jalW, lbW,
 alucontrolE
 );
 
 datapath dp(clk, reset, memtoregE, memtoregM, memtoregW, pcsrcD, branchD, bneD,
-alusrcE, regdstE, regwriteE, regwriteM, regwriteW, jumpD, lbW, alucontrolE, equalD, pcF, instrF,
+alusrcE, regdstE, regwriteE, regwriteM, regwriteW, jumpD, jalW, lbW, alucontrolE, equalD, pcF, instrF,
 aluoutM, writedataM, readdataM, opD, functD, flushE
 );
 endmodule

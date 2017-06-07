@@ -4,7 +4,7 @@ input logic pcsrcD, branchD, bneD,
 input logic alusrcE,
 input logic [1:0] regdstE,
 input logic regwriteE, regwriteM, regwriteW,
-input logic jumpD, lbW,
+input logic jumpD, jalW, lbW,
 input logic [3:0] alucontrolE,
 output logic equalD,
 output logic [31:0] pcF,
@@ -24,12 +24,13 @@ logic [31:0] pcnextFD, pcnextbrFD, pcplus4F, pcbranchD;
 logic [31:0] signimmD, signimmE, signimmshD;
 logic [31:0] srcaD, srca2D, srcaE, srca2E;
 logic [31:0] srcbD, srcb2D, srcbE, srcb2E, srcb3E;
-logic [31:0] pcplus4D, instrD;
+logic [31:0] pcplus4D, pcplus4E, pcplus4M, pcplus4W, instrD;
 logic [31:0] aluoutE, aluoutW;
 logic [31:0] readdataW, resultW;
 logic zeroE;
 logic [7:0] selectedbyteW;
 logic [31:0] selectedbyteextW, selectedreaddataW;
+logic [31:0] aluordata;
 
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
@@ -73,6 +74,7 @@ assign flushD = pcsrcD | jumpD;
 floprc #(32) r1E(clk, reset, flushE, srcaD, srcaE);
 floprc #(32) r2E(clk, reset, flushE, srcbD, srcbE);
 floprc #(32) r3E(clk, reset, flushE, signimmD, signimmE);
+floprc #(32) r7E(clk, reset, flushE, pcplus4D, pcplus4E);
 floprc #(5) r4E(clk, reset, flushE, rsD, rsE);
 floprc #(5) r5E(clk, reset, flushE, rtD, rtE);
 floprc #(5) r6E(clk, reset, flushE, rdD, rdE);
@@ -86,11 +88,13 @@ mux3 #(5) wrmux(rtE, rdE, 5'b11111, regdstE, writeregE);
 // Memory stage
 flopr #(32) r1M(clk, reset, srcb2E, writedataM);
 flopr #(32) r2M(clk, reset, aluoutE, aluoutM);
+flopr #(32) r4M(clk, reset, pcplus4E, pcplus4M);
 flopr #(5) r3M(clk, reset, writeregE, writeregM);
 
 // Writeback stage
 flopr #(32) r1W(clk, reset, aluoutM, aluoutW);
 flopr #(32) r2W(clk, reset, readdataM, readdataW);
+flopr #(32) r4W(clk, reset, pcplus4M, pcplus4W);
 flopr #(5) r3W(clk, reset, writeregM, writeregW);
 
 // load byte logic
@@ -99,5 +103,6 @@ aluoutW[1:0], selectedbyteW);
 signext8 se2(selectedbyteW, selectedbyteextW);
 mux2 #(32) datamux(readdataW, selectedbyteextW, lbW, selectedreaddataW);
 
-mux2 #(32) resmux(aluoutW, selectedreaddataW, memtoregW, resultW);
+mux2 #(32) resmux(aluoutW, selectedreaddataW, memtoregW, resorpc);
+mux2 #(32) resorpc(aluordata, pcplus4W, jalW, resultW);
 endmodule
