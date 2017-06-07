@@ -6,6 +6,7 @@ input logic [1:0] regdstE,
 input logic regwriteE, regwriteM, regwriteW,
 input logic jumpD, jalW, lbW,
 input logic multordivE, hlwriteE, hlwriteM, hlwriteW,
+input logic [1:0] mfhlW,
 input logic [3:0] alucontrolE,
 output logic equalD,
 output logic [31:0] pcF,
@@ -33,7 +34,7 @@ logic [7:0] selectedbyteW;
 logic [31:0] selectedbyteextW, selectedreaddataW;
 logic [31:0] aluordata;
 logic [31:0] hiE, loE, hiM, loM, hiW, loW;
-logic [31:0] hireg, loreg;
+logic [31:0] hireg, loreg, rfinput;
 
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
@@ -49,7 +50,7 @@ mux2 #(32) pcmux(pcnextbrFD,{pcplus4D[31:28], instrD[25:0], 2'b00}, jumpD, pcnex
 
 // register file (operates in decode and writeback)
 regfile rf(clk, regwriteW, rsD, rtD, writeregW,
-resultW, srcaD, srcbD);
+rfinput, srcaD, srcbD);
 
 // lo and hi registers (operates ini decode and writeback)
 hiandlo regs(clk, hlwriteW, hiW, loW, hireg, loreg);
@@ -115,4 +116,5 @@ mux2 #(32) datamux(readdataW, selectedbyteextW, lbW, selectedreaddataW);
 
 mux2 #(32) resmux(aluoutW, selectedreaddataW, memtoregW, aluordata);
 mux2 #(32) resorpc(aluordata, pcplus4W, jalW, resultW);
+mux3 #(32) resulthilo(resultW, loreg, hireg, mfhlW, rfinput);
 endmodule
