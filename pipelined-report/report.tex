@@ -163,11 +163,30 @@ To see the changes made to the code to support this instruction run: \\
 \end{figure}
 
 
-\subsection{Next Instruction}
+\subsection{Multiplication and Division}
+As the textbook states, Multiplication and division are somewhat different from other arithmetic operations. Multiplying two 32-bit numbers produces a 64-bit product. Dividing two 32-bit numbers produces a 32-bit quotient and a 32-bit remainder.
+
+The MIPS architecture has two special-purpose registers, hi and lo, which are used to hold the results of multiplication and division. \code{mult \$s0, \$s1} multiplies the values in \$s0 and \$s1. The 32 most significant bits of the product are placed in hi and the 32 least significant bits are placed in lo. Similarly, \code{div \$s0, \$s1} computes \$s0/\$s1. The quotient is placed in lo and the remainder is placed in hi.
+
+\subsubsection{The Multiplication and Divison unit}
+The normal ALU doesn't support multiplication and division operations. In reality, multiplication and division are executed using dedicated expensive circuits and usually take several clock cycles to finish. Our Design will be simple however. We will add a new unit that operates in the execute stage alongside the ALU to carry out multiplication and division.
+
+The unit's inputs are the two numbers, which are exactly the same as those provided to the ALU, and a flag that tells the unit to either multiply or divide. The outputs are two 32-bit numbers, the hi and lo values. Appendix \ref{appendix:multdivunit} shows the unit's code.
+
+\subsubsection{Hi and Lo Registers}
+The hi and lo registers are used to support 64-bit multiplication and divsion results. They exist outside the register file as separate registers. However, we write them in the first half of the write back cycle and read them in the second half of the decode cycle. The registers are encapsulated in module with a write enable signal. It has two input ports to input the data to be written, and two output ports that has the data read.
+
+\subsubsection{Supporting \code{Mult} and \code{div} Instructions}
+Once we add the multiplication and division unit and the hi and lo registers to the datapath, it's only the addition or few control signals that's remaining. We add two new control signals, \textit{multordiv} and \textit{hlwrite}, the former tells the unit to multiply or divide, and the latter tells the hi and lo module to write the data at its input port to the registers. The control signals and the result of multiplication unit will be passed through the pipeline registers to the write back stage as usual (except for \textit{multordiv} which is needed only in the execute stage).
+
+Two more rows are added to the main decoder to detect \code{mult} and \code{div} and generate the needed control signals.
+\subsubsection{Move from Lo and Hi}
+
+\subsubsection{Hazard Handling}
+
 %=====================================%
 % Source Code appendix
 %=====================================%
-
 \newpage
 \appendix
 \begin{multicols}{2}
@@ -181,5 +200,10 @@ To see the changes made to the code to support this instruction run: \\
 \subsection{mipsparts.sv}
 \label{appendix:src:mipsparts}
 \lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../mipsparts.sv}
+
+\subsection{multdivunit.sv}
+\label{appendix:multdivunit}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../multdivunit.sv}
+
 \end{multicols}
 \end{document}          
