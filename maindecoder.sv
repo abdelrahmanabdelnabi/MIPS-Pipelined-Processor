@@ -11,7 +11,7 @@ logic [14:0] controls;
 
 assign {regwrite, regdst, alusrc, branch, bne,
 	memwrite, memtoreg, jump, jal, lb,
-	multordiv, hlrwite, aluop} = controls;
+	multordiv, hlwrite, aluop} = controls;
 
 always_comb
 case(op)			

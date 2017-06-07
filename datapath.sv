@@ -33,14 +33,14 @@ logic [7:0] selectedbyteW;
 logic [31:0] selectedbyteextW, selectedreaddataW;
 logic [31:0] aluordata;
 logic [31:0] hiE, loE, hiM, loM, hiW, loW;
+logic [31:0] hireg, loreg;
 
 // hazard detection
 hazard h(rsD, rtD, rsE, rtE, writeregE, writeregM,
 writeregW,regwriteE, regwriteM, regwriteW,
 memtoregE, memtoregM, branchD, bneD,
 forwardaD, forwardbD, forwardaE,
-forwardbE,
-stallF, stallD, flushE
+forwardbE, stallF, stallD, flushE
 );
 
 // next PC logic (operates in fetch and decode)
@@ -50,6 +50,9 @@ mux2 #(32) pcmux(pcnextbrFD,{pcplus4D[31:28], instrD[25:0], 2'b00}, jumpD, pcnex
 // register file (operates in decode and writeback)
 regfile rf(clk, regwriteW, rsD, rtD, writeregW,
 resultW, srcaD, srcbD);
+
+// lo and hi registers (operates ini decode and writeback)
+hiandlo regs(clk, hlwriteW, hiW, loW, hireg, loreg);
 
 // Fetch stage logic
 flopenr #(32) pcreg(clk, reset, ~stallF, pcnextFD, pcF);
