@@ -6,7 +6,7 @@ module controller(input logic clk, reset,
 	output logic memtoregW, memwriteM,
 	output logic pcsrcD, branchD, bneD, alusrcE,
 	output logic [1:0] regdstE,
-	output logic regwriteE, regwriteM, regwriteW, jumpD, jalW, lbW,
+	output logic regwriteE, regwriteM, regwriteW, jumpD, jalD, jalW, jrD, lbW,
 	output logic multordivE, hlwriteE, hlwriteM, hlwriteW,
 	output logic [1:0] mfhlW,
         output logic [3:0] alucontrolE);
@@ -18,13 +18,13 @@ logic regwriteD;
 logic [3:0] alucontrolD;
 logic memwriteE;
 logic lbD, lbE, lbM;
-logic jalD, jalE, jalM;
+logic jalE, jalM;
 logic multordivD, hlwriteD;
 logic [1:0] mfhlD, mfhlE, mfhlM;
 
 maindec md(opD, memtoregD, memwriteD, branchD, bneD,
-	alusrcD, regdstD, regwriteD, jumpD, jalD, lbD,
-	multordivD, hlwriteD, mfhlD, aluopD);
+	alusrcD, regdstD, regwriteD, jumpD, jalD, jrD, lbD,
+	multordivD, hlwriteD, mfhlD, aluopD, functD);
 
 aludec ad(functD, aluopD, alucontrolD);
 

@@ -4,7 +4,7 @@ input logic pcsrcD, branchD, bneD,
 input logic alusrcE,
 input logic [1:0] regdstE,
 input logic regwriteE, regwriteM, regwriteW,
-input logic jumpD, jalW, lbW,
+input logic jumpD, jalD, jalW, jrD, lbW,
 input logic multordivE, hlwriteE, hlwriteM, hlwriteW,
 input logic [1:0] mfhlW,
 input logic [3:0] alucontrolE,
@@ -46,7 +46,7 @@ forwardbE, stallF, stallD, flushE
 
 // next PC logic (operates in fetch and decode)
 mux2 #(32) pcbrmux(pcplus4F, pcbranchD, pcsrcD, pcnextbrFD);
-mux2 #(32) pcmux(pcnextbrFD,{pcplus4D[31:28], instrD[25:0], 2'b00}, jumpD, pcnextFD);
+mux3 #(32) pcmux(pcnextbrFD,{pcplus4D[31:28], instrD[25:0], 2'b00}, srcaD, { jrD,jumpD}, pcnextFD);
 
 // register file (operates in decode and writeback)
 regfile rf(clk, regwriteW, rsD, rtD, writeregW,
@@ -74,7 +74,7 @@ assign rsD = instrD[25:21];
 assign rtD = instrD[20:16];
 assign rdD = instrD[15:11];
 assign shamtD = instrD[10:6];
-assign flushD = pcsrcD | jumpD;
+assign flushD = (pcsrcD & ~stallD) | jumpD | jrD;
 
 // Execute stage
 floprc #(32) r1E(clk, reset, flushE, srcaD, srcaE);

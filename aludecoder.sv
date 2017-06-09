@@ -4,8 +4,9 @@ input logic [1:0] aluop,
 output logic [3:0] alucontrol);
 always_comb
 case(aluop)
-	2'b00: alucontrol <= 3'b010; // add
-	2'b01: alucontrol <= 3'b110; // sub
+	2'b00: alucontrol <= 4'b0010; // add
+	2'b01: alucontrol <= 4'b1010; // sub
+	2'b11: alucontrol <= 4'b1011; // slti
 	default: case(funct) // RTYPE
 		6'b100000: alucontrol <= 4'b0010; // ADD
 		6'b100010: alucontrol <= 4'b1010; // SUB
