@@ -1,6 +1,6 @@
 module imem(input logic [5:0] a,
 	output logic [31:0] rd);
-	logic [31:0] RAM[63:0];
+	logic [31:0] RAM[4095:0];
 initial
 begin
 	$readmemh("memfile.dat",RAM);
@@ -13,7 +13,7 @@ module dmem(input logic clk, we,
 	input logic [31:0] a, wd,
 	output logic [31:0] rd);
 
-reg [31:0] RAM[63:0];
+reg [31:0] RAM[4095:0];
 initial
 begin
 	$readmemh("memfile.dat",RAM);
