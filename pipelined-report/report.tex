@@ -51,13 +51,60 @@
 
 \section{Introduction}
 \subsection{Supported Instructions}
-\begin{tabular}{ccc}
-	\label{ISA}
-	% TODO: add table of supported instructions here
-	Opcodes & Example Assembly & Semantics \\
-	
-\end{tabular}
-
+\label{ISA}
+	\begin{center}
+		
+		\begin{tabular}{| c | c | c |}
+			\hline
+			% TODO: add table of supported instructions here
+			Opcodes &Example Assembly& Semantics\\
+			\hline
+			add &add \$1, \$2, \$3 &\$1 = 2 + \$3\\
+			\hline
+			sub &sub \$1, \$2, \$3 &\$1 = 2 - \$3\\
+			\hline
+			add immediate &addi 1, \$2, 100 &\$1 = 2 + 100\\
+			\hline
+			multiply &mult 2, \$3 &hi, lo = \$2 * \$3\\
+			\hline
+			divide &div \$2, \$3 &lo = 2/\$3, hi = \$2 mod \$3\\
+			\hline
+			move from hi& mfhi \$1 &\$1 = hi\\
+			\hline
+			move from low& mflo \$1 &\$1 = lo\\
+			\hline
+			and &and \$1, \$2, \$3& \$1 = \$2 \& \$3\\
+			\hline
+			or &or \$1, \$2, \$3& \$1 = \$2 $|$ \$3\\
+			\hline
+			shift left logical &sll \$1, \$2, 10&\$1 = \$2 $<<$ 10\\
+			\hline
+			shift right logical & srl \$1, \$2, 10 &\$1 = \$2 $>>$ 10\\
+			\hline
+			load word &lw \$1, \$2(100) &\$1 = ReadMem32(\$2 + 100)\\
+			\hline
+			store word &sw \$1, \$2(100)& WriteMem32(\$2 + 100, \$1)\\
+			\hline
+			load byte &lb \$1, \$2(100)& \$1 = SignExt(ReadMem8(\$2 + 100))\\
+			\hline
+			store byte &sb \$1, \$2(100)& WriteMem8(\$2 + 100, \$1)\\
+			\hline
+			branch on equal &beq \$1, \$2, Label &if (\$1 == \$2) goto Label\\
+			\hline
+			branch on not equal &bne \$1, \$2, Label &if (\$1 != \$2) goto Label\\
+			\hline
+			set on less than &slt \$1, \$2, \$3 &if (\$2 $<$ \$3) \$1 = 1 else \$1 = 0\\
+			\hline
+			set on less than immediate& slti \$1, \$2, 100 &if (\$2 $<$ 100) \$1 = 1 else \$1 = 0\\
+			\hline
+			jump &j Label &goto Label\\
+			\hline
+			jump register &jr \$31 &goto \$31\\
+			\hline
+			jump and link & jal Label&\$31 = PC + 4; goto Label\\
+			\hline
+		\end{tabular}
+	\end{center}
 \subsection{Initial Version}
 We will use the MIPS pipelined version developed in our textbook as the initial version which we will build on it other components to support the remaining instructions.
 
@@ -78,10 +125,10 @@ After this two fixes the test bench indicates a successful simulation.
 
 \section{Extending the Design}
 
-In this section we will modify and/or extend the design of the MIPS pipelined processor to support new instructions as indicated in table \ref{ISA}
+In this section we will modify and/or extend the design of the MIPS pipelined processor to support new instructions as indicated in section \ref{ISA}
 
 \subsection{Branch on Not Equal}
-supporting this instruction is relatively easy, as branch on not equal is already supported. We just have to detect the not equal condition. To do this, we modify the control unit to detect the opcode of \code{bne} and generate the required control signals.
+supporting this instruction is relatively easy, as branch on equal is already supported. We just have to detect the not equal condition. To do this, we modify the control unit to detect the opcode of \code{bne} and generate the required control signals.
 
 We add a new control signal, \code{bneD} which is 1 when the instruction in the decode stage is a \code{bne}. all the control signals for \code{beq} and \code{bne} are same except for the signals \code{branchD} and \code{bneD}, their values are reversed. 
 
@@ -90,7 +137,14 @@ The logic for \code{pcsrcD} is now different. \code{prcsrcD} is now 1 when eithe
 
 The logic for stalling will need to detect the \code{bne} instruction and stall as necessary exactly the same like for \code{beq}. Therefore the hazard unit takes a new input which the control signal \code{bneD}.
 
-This completes all the necessary changes required for the control unit and datapath.
+This completes all the necessary changes required for the control unit and datapath. Figure \ref{fig:bne} shows all the changes made to the data path.
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{bne.jpeg}
+	\centering
+	\caption{Pipelined processor with support for \code{bne}}
+	\label{fig:bne}
+\end{figure}
 
 We test the instruction by adding a \code{bne \$s2, \$2, 0x30} after the first instruction of our test program. Testing shows that the stall and branching works properly both when the branch is taken and not taken.
 
@@ -101,7 +155,14 @@ To see the changes to the source code to support this instruction run:\\
 
 An example of this instruction is \code{lb \$s1, 40(\$s0)}, which loads the byte at the address of 40 + reg(\$s0), sign-extends it and puts it in register \$s1.
 
-To support this instruction we need to select a byte out of the 4 bytes read from memory each cycle according to $memaddr_{[1:0]}$, and then sign extend it to 32 bits. We will need a control signal that tells us that this is a \code{lb} instruction, then at the memory stage, we will select either the 32 bits memory output or the sign extended byte according to this signal. This implies using a 2-1 multiplexer that has this control signal as its selector. We will need another multiplexer to select the proper byte from the memory word read.
+To support this instruction we need to select a byte out of the 4 bytes read from memory each cycle according to $memaddr_{[1:0]}$, and then sign extend it to 32 bits. We will need a control signal that tells us that this is a \code{lb} instruction, then at the memory stage, we will select either the 32 bits memory output or the sign extended byte according to this signal. This implies using a 2-1 multiplexer that has this control signal as its selector. We will need another multiplexer to select the proper byte from the memory word read. Figure \ref{fig:lb} shows the modifications made to the data path.
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{lb.jpeg}
+	\centering
+	\caption{Pipelined processor with support for \code{lb}}
+	\label{fig:lb}
+\end{figure}
 
 We test the instruction by modifying our test program to use \code{lb} instead of \code{lw} (temporarily). Since this should still the load 7 into register \$s2, it won't modify the final result. We run the simulation and it indicates successful completion. we also see that the \code{lbW} signal takes the value 1 only at the write-back stage of the load byte instruction.
 
@@ -131,13 +192,13 @@ To see the changes made to the code to support these instructions run:\\
 		1001 & A OR $\overline{B}$ \\
 		1010 & A - B \\
 		1011 & SLT \\
-		0100 & B $\langle\langle$ shamt \\
-		0101 & B $\rangle\rangle$ shamt \\
+		0100 & B $<<$ shamt \\
+		0101 & B $>>$ shamt \\
 		\hline
 	\end{tabular}
 \end{center}
-	\label{table:aluctrl}
 	\caption{ALU control truth table}
+	\label{table:aluctrl}
 \end{table}
 
 
@@ -146,11 +207,18 @@ The semantics of \code{jal label} is \code{\$ra = PC + 4, goto label}. \code{jal
 
 Implementing this instruction won't affect the hardware as much because \code{jal} is mixture of jump and R-Type, both of which are already supported. We will add to the datapath a new mux that selects which data to write to the register file. The new mux will choose between \textit{ResultW} and \textit{PCPlus4W}, according to the selector \textit{jal}, which is a new control signal that is true only if the instruction is \code{jal}. The \textit{PCPlus4} signal must be passed from the decode to the write back stage so that we can write it to the register file. We will also extend the \textit{RegDst} mux, which selects which register to write on, to accept the number 31 as a new input. This means that we need to extend the mux selector control signal, \textit{RegDst}, to 2 bits.
 
-The main decoder sets the \textit{Jump} signal to 1 so that the hazard unit handles flushes appropriately. Also no modifications to the hazard unit are required since the writing to register file part of the instruction (\textit{WriteRegE} and \textit{RegWriteE} signals) is the same as for R-Type instructions.
+The main decoder sets the \textit{Jump} signal to 1 so that the hazard unit handles flushes appropriately. Also no modifications to the hazard unit are required since the writing to register file part of the instruction (\textit{WriteRegE} and \textit{RegWriteE} signals) is the same as for R-Type instructions. Figure \ref{fig:jal} shows the modifications made to the data path.
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{jal.jpeg}
+	\centering
+	\caption{Pipelined processor with support for \code{jal}}
+	\label{fig:jal}
+\end{figure}
 
 To test the instruction, we modify the test program to use \code{jal} instead of \code{j} on the instruction at address 3C. This won't change the results. It will only write the value of PC + 4, which is 40 at the time of executing the instruction, to the return address register, \$ra.
 
-Figure \ref{jaltest} shows the simulation of the test program with \code{jal} being used. Notice the simulation ends successfully the \textit{jalD} and \textit{jalW} signals are 1 when the instruction is decoded and when the result is written to the register file. Also notice that the return address register has the correct value (0x40) written to it, at the second half of the write back stage of the \code{jal} instruction.
+Figure \ref{fig:jaltest} shows the simulation of the test program with \code{jal} being used. Notice the simulation ends successfully the \textit{jalD} and \textit{jalW} signals are 1 when the instruction is decoded and when the result is written to the register file. Also notice that the return address register has the correct value (0x40) written to it, at the second half of the write back stage of the \code{jal} instruction.
 
 To see the changes made to the code to support this instruction run: \\
 \code{git diff 8f6f e0ea -- mips.sv controller.sv datapath.sv \\ maindecoder.sv}
@@ -158,10 +226,9 @@ To see the changes made to the code to support this instruction run: \\
 \begin{figure}
 	\includegraphics[width=\textwidth]{jaltest.png}
 	\centering
-	\label{jaltest}
 	\caption{simulation and testing of \code{jal}}
+	\label{fig:jaltest}
 \end{figure}
-
 
 \subsection{Multiplication and Division}
 As the textbook states, Multiplication and division are somewhat different from other arithmetic operations. Multiplying two 32-bit numbers produces a 64-bit product. Dividing two 32-bit numbers produces a 32-bit quotient and a 32-bit remainder.
@@ -180,30 +247,175 @@ The hi and lo registers are used to support 64-bit multiplication and divsion re
 Once we add the multiplication and division unit and the hi and lo registers to the datapath, it's only the addition or few control signals that's remaining. We add two new control signals, \textit{multordiv} and \textit{hlwrite}, the former tells the unit to multiply or divide, and the latter tells the hi and lo module to write the data at its input port to the registers. The control signals and the result of multiplication unit will be passed through the pipeline registers to the write back stage as usual (except for \textit{multordiv} which is needed only in the execute stage).
 
 Two more rows are added to the main decoder to detect \code{mult} and \code{div} and generate the needed control signals.
-\subsubsection{Move from Lo and Hi}
+
+\subsubsection{Supporting \code{mfhi} and \code{mflo}}
+\label{mfhl}
+\code{mfhi} and \code{mflo} turn out to be simple to implement as they operate in the write back stage only. The data needed, i.e the hi or lo values, are only needed in the write back stage, which eliminates the need for RAW hazard handling as no forwarding or stalling is needed.
+
+To implement this instruction we need to select which value to write to the register file. We add a new mux that has the \textit{ResultW}, hi, and lo as its inputs. The inputs are selected according to the instruction in execution, whether it's a \code{mfhi}, \code{mflo}, or any other instruction. Therefore we will need a 2 bit control signal, \textit{mvhl}, for the multiplexer selectors.
+
+Figure \ref{fig:mdhl} shows all the modifications made to the data path to support \code{mult}, \code{div}, \code{mvhi}, and \code{mflo}.
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{mdhl.jpeg}
+	\centering
+	\caption{Pipelined processor with support for \code{mult}, \code{div}, \code{mvhi}, and \code{mflo}}
+	\label{fig:mdhl}
+\end{figure}
 
 \subsubsection{Hazard Handling}
+For \code{mult} and \code{div}, the operands for the instructions are properly already handled by the hazard unit since the forwarded operand is the one that the multiplication unit uses. For \code{mfhi} and \code{mflo}, the operands, i.e the hi and lo registers, are read at the memory cycle which guarantees that the proper value is read, as indicated in section \ref{mfhl}.
 
+\subsection{Set If Less than Immediate}
+The ALU already supports \code{slt}, we just need to pass the immediate field as the second operand to the ALU. The datapath already has a path for passing the sign-extended immediate to the ALU, by setting \textit{ALUSrc} to 1. We assign the \textit{ALUOp} 11 to subtract B from A and set the result to 1 if A \textless{ } B and 0 otherwise. Table \ref{table:aluop} shows the new ALUOp table.
+
+\begin{table}
+	\begin{center}
+		\begin{tabular}{|c|c|}
+			\hline
+			$ALUOp_{1:0}$ & Operation \\
+			\hline
+			00 & Add \\
+			01 & Sub \\
+			10 & Look at \textit{funct} \\
+			11 & SLT \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{ALU operation Table}
+	\label{table:aluop}
+\end{table}
+
+\subsection{Jump Register}
+\code{jr} jumps to the address stored in \textit{reg(rs)}, instead of the JTA calculated from the immediate field of a jump instruction. Unlike the normal jump, \code{jr} is an R-Type instruction.
+
+To Implement \code{jr}, we will extend the mux that selects which data gets written on the PC register. The extended mux will choose between PC’ (the result of the previous mux), jump target address, and SrcAD (value of \textit{reg(rs)}). We added a new control signal, \textit{jr} that is true only if the instruction is \code{jr}. Now concerning the Selector of the extended mux , we will use the jump control signal as the least significant bit of the selector and the new \textit{jr} control signal as the most significant bit. And of course the proper value of the selectors are generated by the main decoder. Figure \ref{fig:jr} shows the modifications to the data path to implement this instruction.
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{jr.jpeg}
+	\centering
+	\caption{Pipelined processor with support for \code{jr}}
+	\label{fig:jr}
+\end{figure}
+
+\subsection{Store Byte}
+According to the textbook and the final project description, store byte stores the least significant bits of a register in a byte in memory without affecting the remaining bytes in the same word in memory. This requires modifying the memory to able to write only one byte.
+
+We add a pin to the memory that specifies if the memory should store only one byte of the data at its input port. The pin is connected to \textit{sb}, a new control signal. Appendix \ref{appendix:dmem} has the modified source code to support this instruction. Other than that, no more modifications are required. No changes are made to the data path.
+
+\section{Simulation and Testing}
+To ensure that our modifications have been completed correctly and work together as intended, we test the completed pipelined processor on 3 programs.
 %=====================================%
 % Source Code appendix
 %=====================================%
 \newpage
 \appendix
 \begin{multicols}{2}
-[	
+
 \section{Source Code}
 \label{appendix:src}
-]
+\subsection{datapath.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../datapath.sv}
+
 \subsection{maindecoder.sv}
 \lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../maindecoder.sv}
 
-\subsection{mipsparts.sv}
-\label{appendix:src:mipsparts}
-\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../mipsparts.sv}
+\subsection{aludecoder.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../aludecoder.sv}
+
+\subsection{controller.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../controller.sv}
 
 \subsection{multdivunit.sv}
 \label{appendix:multdivunit}
 \lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../multdivunit.sv}
+
+\subsection{alu.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../alu.sv}
+
+\subsection{mipsmem.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../mipsmem.sv}
+
+\subsection{mips.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../mips.sv}
+
+\subsection{topmulti.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../topmulti.sv}
+
+\subsection{hazard.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../hazard.sv}
+
+\subsection{testbench.sv}
+\label{appendix:src:mipsparts}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../testbench.sv}
+
+\section{Test Programs}
+\label{appendix:tests}
+
+\subsection{Textbook Test Program}
+stores 7 in memory location 84.
+
+\code{main: addi \$2, \$0, 5\\
+	addi \$3, \$0, 12\\
+	addi \$7, \$3, −9\\
+	or \$4, \$7, \$2 \\
+	and \$5, \$3, \$4\\
+	add \$5, \$5, \$4\\
+	beq \$5, \$7, end\\
+	slt \$4, \$3, \$4\\
+	beq \$4, \$0, around\\
+	addi \$5, \$0, 0\\
+	around: slt \$4, \$7, \$2\\
+	add \$7, \$4, \$5\\
+	sub \$7, \$7, \$2\\
+	sw \$7, 68(\$3)\\
+	lw \$2, 80(\$0)\\
+	j end\\
+	addi \$2, \$0, 1\\
+	end: sw \$2, 84(\$0)}\\
+
+\subsection{Series Sum}
+Adds the numbers from 1 to 10 inclusive.
+
+\code{main:
+	addi \$7, \$0, 10 \\
+	add \$a0, \$0, \$7\\
+	jal seriesSum\\
+	sw \$v0, 84(\$0)\\
+	seriesSum:\\
+	add \$v0, \$0, \$0\\
+	loop:\\
+	add \$v0, \$v0, \$a0\\
+	addi \$a0, \$a0, -1\\
+	bne \$0, \$a0, loop\\
+	jr \$ra\\} 
+
+\subsection{Recursive Factorial}
+calculates the factorial of a number, in this test the number is 5.
+
+\code{addi \$sp, \$0, 400 \\
+	main:
+	addi \$a0, \$0, 5\\
+	jal factorial\\
+	add \$s0, \$v0, \$0\\
+	sw \$s0, 84(\$0)\\
+	factorial: addi \$sp, \$sp, -8\\
+	sw \$a0, 4(\$sp)\\
+	sw \$ra, 0(\$sp)\\
+	addi \$t0, \$0, 2\\
+	slt \$t0, \$a0, \$t0
+	beq \$t0, \$0, else\\
+	addi \$v0, \$0, 1\\
+	addi \$sp, \$sp, 8\\
+	jr \$ra\\
+	else: addi \$a0, \$a0, -1\\
+	jal factorial\\
+	lw \$ra, 0(\$sp)\\
+	lw \$a0, 4(\$sp)\\
+	addi \$sp, \$sp, 8\\
+	mult \$a0, \$v0\\
+	mflo \$v0\\
+	jr \$ra\\}
 
 \end{multicols}
 \end{document}          
