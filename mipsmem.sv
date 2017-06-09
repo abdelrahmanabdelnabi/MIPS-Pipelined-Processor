@@ -9,7 +9,7 @@ end
 assign rd = RAM[a]; // word aligned
 endmodule
 
-module dmem(input logic clk, we,
+module dmem(input logic clk, we, sbyte,
 	input logic [31:0] a, wd,
 	output logic [31:0] rd);
 
@@ -22,5 +22,8 @@ end
 assign rd = RAM[a[31:2]]; // word aligned
 always @(posedge clk)
 if (we)
-RAM[a[31:2]] <= wd;
+if(sbyte)
+	RAM[a[31:2]] <= {RAM[a[31:2]][31:8], wd[7:0]};
+else
+	RAM[a[31:2]] <= wd;
 endmodule
