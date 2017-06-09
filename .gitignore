@@ -15,6 +15,7 @@
 !aludecoder.sv
 !testbench.sv
 !multdivunit.sv
+!hiandlo.sv
 !memfile.dat
 !pipelined-report/report.tex
 !pipelined-report/images/
