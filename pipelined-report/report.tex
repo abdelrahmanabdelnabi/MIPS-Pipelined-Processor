@@ -6,7 +6,7 @@
 \usepackage{listings}      % for code listings
 \usepackage{graphicx}      % for inserting images
 \usepackage{multicol}      % for multi columns pages
-
+\usepackage{rotating}
 % turn on page numbers and section name on each page
 \pagestyle{headings}
 
@@ -27,10 +27,10 @@
 	Abdelrahman Mohamed Abdelnabi\\
 	3466
 	\and
-	Ahmed Atia Lotfey Siam \\
+	Ahmed Lotfey Atia Siam \\
 	4129
 	\and
-	Ahmed Fayez \\
+	Ahmed Mohamed Fayez \\
 	4130
 }
 
@@ -50,6 +50,16 @@
 
 
 \section{Introduction}
+This is a 5 stage (Fetch, Decode, Execute, Memory, Write Back) MIPS pipelined processor.
+
+To ease the modification process and allow readers to see how we went on to modify the source code to implement a new instruction, we use \textit{git} as a \textit{version control system}. After most of the instructions, there will be a command that you can run, after \textit{cloning the project from git}, to see the changes that we made at each step.
+
+You can clone the project using this command:\\
+\code{git clone https://github.com/abdelrahmanabdelnabi/\\MIPS-Pipelined-Processor.git}
+
+alternatively, if you don't have git, you can to this link to see the project through its stages (i.e \textit{commits}) on \textit{Github}:\\
+\code{https://github.com/abdelrahmanabdelnabi/MIPS-Pipelined-Processor}
+
 \subsection{Supported Instructions}
 \label{ISA}
 	\begin{center}
@@ -262,6 +272,8 @@ Figure \ref{fig:mdhl} shows all the modifications made to the data path to suppo
 	\caption{Pipelined processor with support for \code{mult}, \code{div}, \code{mvhi}, and \code{mflo}}
 	\label{fig:mdhl}
 \end{figure}
+ To see the changes made to the source code to support these instructions, run:\footnote{we forgot to add the \textit{hiandlo } module to git at this commit, however you can still view the module starting from commit number \code{4503}}\\
+ \code{git diff 2dce 306f} 
 
 \subsubsection{Hazard Handling}
 For \code{mult} and \code{div}, the operands for the instructions are properly already handled by the hazard unit since the forwarded operand is the one that the multiplication unit uses. For \code{mfhi} and \code{mflo}, the operands, i.e the hi and lo registers, are read at the memory cycle which guarantees that the proper value is read, as indicated in section \ref{mfhl}.
@@ -301,10 +313,58 @@ To Implement \code{jr}, we will extend the mux that selects which data gets writ
 \subsection{Store Byte}
 According to the textbook and the final project description, store byte stores the least significant bits of a register in a byte in memory without affecting the remaining bytes in the same word in memory. This requires modifying the memory to able to write only one byte.
 
-We add a pin to the memory that specifies if the memory should store only one byte of the data at its input port. The pin is connected to \textit{sb}, a new control signal. Appendix \ref{appendix:dmem} has the modified source code to support this instruction. Other than that, no more modifications are required. No changes are made to the data path.
+We add a pin to the memory that specifies if the memory should store only one byte of the data at its input port. The pin is connected to \textit{sb}, a new control signal. Appendix \ref{appendix:dmem} has the modified source code for the memory module. Other than that, no more modifications are required. No changes are made to the data path.
+
+To see the source code modifications made to support this instruction run:\\
+\code{ git diff b26a ea0a}
+
+\section{Final Main Decoder Table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+	\hline
+\begin{turn}{-90}Inst\end{turn}&\begin{turn}{-90}Opcode\end{turn}&\begin{turn}{-90}RegWrite\end{turn}&\begin{turn}{-90}RegDst\end{turn}&\begin{turn}{-90}ALUSrc\end{turn}&\begin{turn}{-90}Branch\end{turn}&\begin{turn}{-90}Bne\end{turn}&\begin{turn}{-90}MemWrite\end{turn}&\begin{turn}{-90}MemtoReg\end{turn}&\begin{turn}{-90}Jump\end{turn}&\begin{turn}{-90}Jal\end{turn}&\begin{turn}{-90}Jr\end{turn}&\begin{turn}{-90}Lb\end{turn}&\begin{turn}{-90}Sb\end{turn}&\begin{turn}{-90}MultorDiv\end{turn}&\begin{turn}{-90}hlwrite\end{turn}&\begin{turn}{-90}mvhl\end{turn}&\begin{turn}{-90}ALUOp\end{turn}\\
+\hline
+R-Type & 000000 & 1 & 00 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+JR & 000000 & 0 & 00 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+MULT & 000000 & 0 & 00 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 00 & 00 \\
+\hline
+DIV & 000000 & 0 & 00 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 00 & 00 \\
+\hline
+MFLO & 000000 & 1 & 01 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 01 & 00 \\
+\hline
+MFHI & 000000 & 1 & 01 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 10 & 00 \\
+\hline
+LW & 100011 & 1 & 00 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+SW & 101011 & 0 & 00 & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+BEQ & 000100 & 0 & 00 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 01 \\
+\hline
+BNE & 000101 & 0 & 00 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 01 \\
+\hline
+ADDI & 001000 & 1 & 00 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+J & 000010 & 0 & 00 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+LB & 100000 & 1 & 00 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+SB & 101000 & 0 & 00 & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 00 & 00 \\
+\hline
+JAL & 000011 & 1 & 10 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 00 & 00 \\
+\hline
+SLTI & 001010 & 1 & 00 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 00 & 11 \\
+\hline
+
+\end{tabular}
+\end{center}
 
 \section{Simulation and Testing}
-To ensure that our modifications have been completed correctly and work together as intended, we test the completed pipelined processor on 3 programs.
+To ensure that our modifications have been completed correctly and work together as intended, we test the completed pipelined processor on 3 programs, listed in appendix \ref{appendix:tests}.
+
+Because there are too many signals to show and the program takes from 250 to 950 ns to execute, it would be cumbersome to include the simulation screenshots here as they it would take a lot of screenshots to show the simulation of one program. Therefore, its better if you could download the source files attached with this report, compile and run them and view the results on you screen. All the 3 programs have been tested and all show correct results.
+
 %=====================================%
 % Source Code appendix
 %=====================================%
@@ -330,10 +390,14 @@ To ensure that our modifications have been completed correctly and work together
 \label{appendix:multdivunit}
 \lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../multdivunit.sv}
 
+\subsection{hiandlo.sv}
+\lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../hiandlo.sv}
+
 \subsection{alu.sv}
 \lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../alu.sv}
 
 \subsection{mipsmem.sv}
+\label{appendix:dmem}
 \lstinputlisting[breaklines=true,basicstyle=\tiny,language=verilog]{../mipsmem.sv}
 
 \subsection{mips.sv}
